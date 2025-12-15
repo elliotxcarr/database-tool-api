@@ -1,24 +1,20 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Inject } from '@nestjs/common';
 import { QueryBuilderService } from './query-builder.service';
 import { FilterGroupDto } from './filter.dto';
+import { Db } from 'mongodb';
 
 @Controller('query')
 export class QueryController {
-  constructor(private readonly queryBuilder: QueryBuilderService) {}
+  constructor(
+    private readonly queryBuilder: QueryBuilderService,
+    @Inject('MONGO_CONNECTION') private db: Db,
+  ) {}
 
   @Post('run')
   async runQuery(@Body() filterGroup: FilterGroupDto) {
+    
     const mongoQuery = this.queryBuilder.buildMongoQuery(filterGroup);
-    // Example: call MongoDB using the native driver
-    const results = await this.getCollection('users')
-      .find(mongoQuery)
-      .toArray();
-
+    const results = await this.db.collection(filterGroup.db).find(mongoQuery).toArray();
     return results;
-  }
-
-  private getCollection(name: string) {
-    // Assume you have injected or created a MongoDB client somewhere
-    return global.mongo.db('mydb').collection(name);
   }
 }

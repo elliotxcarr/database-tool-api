@@ -11,6 +11,7 @@ export class FilterConditionDto {
   @IsString()
   @IsIn([
     'equals',
+    'exists',
     'ne',
     'gt',
     'gte',
@@ -26,6 +27,14 @@ export class FilterConditionDto {
 export class FilterGroupDto {
   @IsArray()
   conditions: FilterConditionDto[];
+
+  @IsString()
+  @IsIn(['users' , 'vessels' , 'report'])
+  db:'users' | 'vessels' | 'report'
+
+  @IsString()
+  @IsIn(['LOCAL' , 'Dev' , 'QA'])
+  env:'LOCAL' | 'Dev' | 'QA'
 
   @IsString()
   @IsIn(['AND', 'OR'])

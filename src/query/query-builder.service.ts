@@ -4,7 +4,6 @@ import { FilterConditionDto, FilterGroupDto } from './filter.dto';
 @Injectable()
 export class QueryBuilderService {
   buildMongoQuery(group: FilterGroupDto): any {
-    console.log(group)
     if (!group || !group.conditions?.length) {
       return {};
     }
@@ -24,8 +23,6 @@ export class QueryBuilderService {
 
   private convertConditionToMongo(cond: FilterConditionDto) {
     const { field, value, condition } = cond;
-
-    // Prevent dangerous field names like "$where"
     if (field.startsWith('$')) {
       throw new BadRequestException('Invalid field name');
     }
