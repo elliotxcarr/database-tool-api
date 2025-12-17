@@ -12,7 +12,6 @@ export class QueryController {
 
   @Post('run')
   async runQuery(@Body() filterGroup: FilterGroupDto) {
-    
     const mongoQuery = this.queryBuilder.buildMongoQuery(filterGroup);
     const results = await this.db.collection(filterGroup.db).find(mongoQuery).toArray();
     return results;

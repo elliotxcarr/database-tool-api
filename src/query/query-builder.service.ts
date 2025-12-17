@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { FilterConditionDto, FilterGroupDto } from './filter.dto';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class QueryBuilderService {
@@ -26,45 +27,69 @@ export class QueryBuilderService {
     if (field.startsWith('$')) {
       throw new BadRequestException('Invalid field name');
     }
+    const parsedValue = this.parseValue(field, value)
 
     switch (condition) {
       case 'equals':
-        return { [field]: value };
+        return { [field]: parsedValue };
 
       case 'ne':
-        return { [field]: { $ne: value } };
+        return { [field]: { $ne: parsedValue } };
 
       case 'gt':
-        return { [field]: { $gt: value } };
+        return { [field]: { $gt: parsedValue } };
 
       case 'gte':
-        return { [field]: { $gte: value } };
+        return { [field]: { $gte: parsedValue } };
 
       case 'lt':
-        return { [field]: { $lt: value } };
+        return { [field]: { $lt: parsedValue } };
 
       case 'lte':
-        return { [field]: { $lte: value } };
+        return { [field]: { $lte: parsedValue } };
+      case 'exists':
+        return { [field]: { $exists: parsedValue} }
+      // case 'in':
+      //   if (!Array.isArray(value)) {
+      //     throw new BadRequestException('Value for "in" must be an array');
+      //   }
+      //   return { [field]: { $in: value } };
 
-      case 'in':
-        if (!Array.isArray(value)) {
-          throw new BadRequestException('Value for "in" must be an array');
-        }
-        return { [field]: { $in: value } };
-
-      case 'nin':
-        if (!Array.isArray(value)) {
-          throw new BadRequestException('Value for "nin" must be an array');
-        }
-        return { [field]: { $nin: value } };
+      // case 'nin':
+      //   if (!Array.isArray(value)) {
+      //     throw new BadRequestException('Value for "nin" must be an array');
+      //   }
+      //   return { [field]: { $nin: value } };
 
       case 'contains':
         return {
-          [field]: { $regex: value, $options: 'i' },
+          [field]: { $regex: parsedValue, $options: 'i' },
         };
 
       default:
         throw new BadRequestException(`Unsupported condition: ${condition}`);
     }
+  }
+
+  parseValue = (field, value) => {
+    const OBJECT_ID_FIELDS = new Set(['_id', 'client', 'vessels']);
+    const BOOLEAN_FIELDS = new Set(['has_incomplete_vessel_report']);
+    if(OBJECT_ID_FIELDS.has(field)){
+      if(Array.isArray(value)){
+        return value.map((v) => this.toObjectId(v))
+      }
+      return this.toObjectId(value)
+    }
+    if(BOOLEAN_FIELDS.has(field)){
+      return value === 'true'
+    }
+    return value
+  }
+
+  private toObjectId = (value) => {
+    if(!ObjectId.isValid(value)){
+      throw new BadRequestException(`${value} is not a valid Object ID`)
+    }
+    return new ObjectId(value)
   }
 }
