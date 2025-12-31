@@ -7,13 +7,17 @@ import { Db } from 'mongodb';
 export class QueryController {
   constructor(
     private readonly queryBuilder: QueryBuilderService,
-    @Inject('MONGO_CONNECTION') private db: Db,
+    @Inject('MONGO_LOCAL') private localDb: Db,
+    @Inject('MONGO_DEV') private devDb: Db,
   ) {}
 
   @Post('run')
   async runQuery(@Body() filterGroup: FilterGroupDto) {
+    const db = filterGroup.env === 'LOCAL' ? this.localDb : this.devDb;
     const mongoQuery = this.queryBuilder.buildMongoQuery(filterGroup);
-    const results = await this.db.collection(filterGroup.db).find(mongoQuery).toArray();
+    const results = await db.collection(filterGroup.db).find(mongoQuery).toArray();
+    console.log(mongoQuery)
+    console.log(results)
     return results;
   }
 }

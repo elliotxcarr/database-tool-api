@@ -9,12 +9,10 @@ export class QueryBuilderService {
       return {};
     }
 
-    // Convert each condition into a Mongo fragment
     const mongoFragments = group.conditions.map((cond) =>
       this.convertConditionToMongo(cond),
     );
 
-    // Combine fragments using AND or OR
     if (group.groupType === 'OR') {
       return { $or: mongoFragments };
     } else {
@@ -73,7 +71,7 @@ export class QueryBuilderService {
 
   parseValue = (field, value) => {
     const OBJECT_ID_FIELDS = new Set(['_id', 'client', 'vessels']);
-    const BOOLEAN_FIELDS = new Set(['has_incomplete_vessel_report']);
+    const BOOLEAN_FIELDS = new Set(['has_incomplete_vessel_report', 'has_incomplete_engine_report']);
     if(OBJECT_ID_FIELDS.has(field)){
       if(Array.isArray(value)){
         return value.map((v) => this.toObjectId(v))
